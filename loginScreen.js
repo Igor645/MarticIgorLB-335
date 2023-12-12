@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions } from 'react-native';
+import { StyleSheet, TouchableOpacity, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import ImageButton from './listBtn';
 import AddSubjectButton from './addSubjectBtn';
 import Dropdown from './dropdown';
@@ -29,7 +29,14 @@ function LoginScreen({ route }) {
           const user = parsedUsers.find(user => user.username === username && user.password === password);
           if (user) {
             // Assuming studentId is present in the user object
-            await AsyncStorage.setItem('loggedInUser', JSON.stringify({ isLoggedIn: true, studentId: user.studentId, username: user.username }));
+            await AsyncStorage.setItem(
+              'loggedInUser',
+              JSON.stringify({
+                isLoggedIn: true,
+                studentId: user.studentId,
+                username: user.username,
+              })
+            );
             navigation.navigate('Overview');
           } else {
             Alert.alert('Login Failed', 'Invalid username or password.');
@@ -41,31 +48,53 @@ function LoginScreen({ route }) {
       };     
   
     return (
-      <View style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+        <View style={styles.container}>
         <View style={[styles.subjectContainer, { flexDirection: "column", justifyContent: "space-evenly", alignItems: "center" }]}>
         <Text style={{fontSize: 20}}>Login Screen</Text>
         <TextInput
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          // Other TextInput props
-        />
-        <TextInput
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          // Other TextInput props
-        />
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+        style={{
+          borderBottomWidth: 1,
+          borderBottomColor: '#e3e4ef',
+          backgroundColor: '#f0f0f5',
+          padding: 10, // Adjust the padding to fit the text comfortably
+        }}
+      />
+
+      <TextInput
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        style={{
+          borderBottomWidth: 1,
+          borderBottomColor: '#e3e4ef',
+          backgroundColor: '#f0f0f5',
+          padding: 10, // Adjust the padding to fit the text comfortably
+        }}
+      />
         <Button title="Login" onPress={handleLogin} />
         <TouchableOpacity style={{
             backgroundColor: "lime", 
             padding: 3,
+            borderRadius: 1, // Adjust the value as needed
+            shadowColor: 'black',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.5,
+            shadowRadius: 1,
+            elevation: 1,
             }} onPress={() => navigation.navigate('Register')}>
-        <Text>Register</Text>
+        <Text style={{color: "white",}}>Register</Text>
         </TouchableOpacity>
         </View>
       </View>
+      </KeyboardAvoidingView>
     );
   }
   

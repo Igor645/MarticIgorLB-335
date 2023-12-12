@@ -13,7 +13,9 @@ const Dropdown = ({ onSelect, semesters }) => {
         const storedSemesters = await AsyncStorage.getItem('semesters');
         if (storedSemesters !== null) {
           const parsedSemesters = JSON.parse(storedSemesters);
-          const studentSemesters = parsedSemesters.filter(semester => semester.studentId === 1);
+          const loggedInUser = JSON.parse(await AsyncStorage.getItem('loggedInUser'));
+          const studentId = loggedInUser.studentId;
+          const studentSemesters = parsedSemesters.filter(semester => semester.studentId === studentId);
           const highestSemesterId = studentSemesters.reduce((maxId, semester) => Math.max(maxId, semester.id), 0);
           
           const generatedOptions = Array.from({ length: highestSemesterId }, (_, index) => ({

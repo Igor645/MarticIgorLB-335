@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions } from 'react-native';
+import { StyleSheet, TouchableOpacity, Image, Button, Text, View, ScrollView, FlatList, Alert, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import ImageButton from './listBtn';
 import AddSubjectButton from './addSubjectBtn';
 import Dropdown from './dropdown';
@@ -94,28 +94,30 @@ function DetailScreen({ route }) {
         };
   
         return (
+          <ScrollView>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+          >
           <View style={styles.container}>
             <View style={styles.subjectContainer}>
               <Text style={styles.subjectTitle}>{subject}</Text>
-              <FlatList
-                data={grades}
-                renderItem={({ item, index }) => (
-                  <View
-                    style={[
-                      styles.row,
-                      { backgroundColor: index % 2 === 0 ? '#caf0f8' : '#90e0ef' },
-                    ]}
-                  >
-                    <View style={styles.gradeItem}>
-                      <Text>{item}</Text>
-                    </View>
-                    <TouchableOpacity onPress={() => handleDeleteGrade(index)}>
-                      <Image source={require('./images/trash.png')} style={styles.deleteButton} />
-                    </TouchableOpacity>
+              {grades.map((item, index) => (
+                <View
+                  key={`${subject}_${index}`}
+                  style={[
+                    styles.row,
+                    { backgroundColor: index % 2 === 0 ? '#caf0f8' : '#90e0ef' },
+                  ]}
+                >
+                  <View style={styles.gradeItem}>
+                    <Text>{item}</Text>
                   </View>
-                )}
-                keyExtractor={(item, index) => `${subject}_${index}`}
-              />
+                  <TouchableOpacity onPress={() => handleDeleteGrade(index)}>
+                    <Image source={require('./images/trash.png')} style={styles.deleteButton} />
+                  </TouchableOpacity>
+                </View>
+              ))}
               {grades.length > 1 && new Set(grades).size > 1 && (
                 <View style={styles.chartContainer}>
                   <LineChart
@@ -137,7 +139,7 @@ function DetailScreen({ route }) {
                         borderRadius: 16,
                       },
                     }}
-                  />
+                    />
                 </View>
               )}
   
@@ -147,11 +149,17 @@ function DetailScreen({ route }) {
                 </View>
               )}
               <View style={styles.addButtonContainer}>
-              <TextInput style={{textAlign: 'center', marginBottom: 5}}
+              <TextInput style={{textAlign: 'center', marginBottom: 5, borderBottomWidth: 1,
+                    borderBottomColor: '#e3e4ef',
+                    backgroundColor: '#f0f0f5',
+                    paddingLeft: 25,
+                    paddingRight: 25,
+                    marginTop: 25,}}
                   placeholder="Enter new grade"
                   value={newGrade}
                   onChangeText={(text) => setNewGrade(text)}
-                  keyboardType="numeric" // Set the keyboardType to 'numeric' for a number pad
+                  keyboardType="numeric"
+                  onSubmitEditing={handleAddGrade}
                 />
                 <TouchableOpacity onPress={handleAddGrade}>
                 <Text>Add Grade</Text>
@@ -159,11 +167,14 @@ function DetailScreen({ route }) {
               </View>
             </View>
           </View>
+          </KeyboardAvoidingView>
+          </ScrollView>
         );      
   }
   
   const styles = StyleSheet.create({
     container: {
+      minHeight: Dimensions.get('window').height * 0.92,
       flex: 1,
       backgroundColor: '#e3e4ef',
       alignItems: 'center',
@@ -204,7 +215,7 @@ function DetailScreen({ route }) {
     addButtonContainer: {
       alignItems: 'center',
       marginBottom: 10,
-      marginTop: 10,
+      marginTop: "auto",
     },
     gradeItem: {
       flex: 1,
@@ -223,7 +234,7 @@ function DetailScreen({ route }) {
     chartContainer: {
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 20,
+      marginTop: 25,
       marginRight: 30,
     },
   });

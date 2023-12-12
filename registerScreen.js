@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TextInput, Button } from 'react-native';
-import { Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function RegisterScreen({ navigation }) {
@@ -43,25 +42,38 @@ function RegisterScreen({ navigation }) {
   };
   
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
     <View style={styles.container}>
     <View style={[styles.subjectContainer, { flexDirection: "column", justifyContent: "space-evenly", alignItems: "center" }]}>
-    <Text style={{fontSize: 20}}>Login Screen</Text>
+    <Text style={{fontSize: 20}}>Register Screen</Text>
     <TextInput
       placeholder="Username"
       value={username}
       onChangeText={setUsername}
-      // Other TextInput props
-    />
+      style={{
+        borderBottomWidth: 1,
+        borderBottomColor: '#e3e4ef',
+        backgroundColor: '#f0f0f5',
+        padding: 10, // Adjust the padding to fit the text comfortably
+      }}    />
     <TextInput
       placeholder="Password"
       secureTextEntry
       value={password}
       onChangeText={setPassword}
-      // Other TextInput props
-    />
+      style={{
+        borderBottomWidth: 1,
+        borderBottomColor: '#e3e4ef',
+        backgroundColor: '#f0f0f5',
+        padding: 10, // Adjust the padding to fit the text comfortably
+      }}    />
     <Button title="Register" onPress={handleRegister} />
     </View>
   </View>
+  </KeyboardAvoidingView>
   );
 }
 

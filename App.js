@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, ActivityIndicator, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions } from 'react-native';
+import { StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions, KeyboardAvoidingView, Platform} from 'react-native';
 import ImageButton from './listBtn';
 import AddSubjectButton from './addSubjectBtn';
 import Dropdown from './dropdown';
@@ -34,7 +34,7 @@ export default function App() {
 function Overview(){
   const isFocused = useIsFocused();
   const [semesters, setSemesters] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState();
   let [currentStudentId, setCurrentStudentId] = useState(0);
   const [username, setUsername] = useState('');
 
@@ -47,7 +47,6 @@ function Overview(){
         console.log('Semesters JSON:', JSON.stringify(parsedSemesters, null, 2));
         setSemesters(parsedSemesters);
       } else {
-        // If there are no semesters in local storage, set a default semester
         await AsyncStorage.setItem('semesters', JSON.stringify([]));
       }
     } catch (error) {
@@ -61,10 +60,13 @@ function Overview(){
       console.log(userData)
       if (userData !== null) {
         const parsedUserData = JSON.parse(userData);
-        setIsLoggedIn(parsedUserData.isLoggedIn === 'true');
+        setIsLoggedIn(parsedUserData.isLoggedIn === true);
         setCurrentStudentId(parsedUserData.studentId);
         setUsername(parsedUserData.username);
         console.log(`Current studentId: ${currentStudentId}`)
+        console.log(`Current username: ${username}`)
+        console.log(`Current isloggedin: ${isLoggedIn}`)
+
       }
     } catch (error) {
       console.error('Error fetching login status:', error);
@@ -102,7 +104,6 @@ function Overview(){
   };
 
   const renderLoginButton = () => {
-    console.log(isLoggedIn)
     if (isLoggedIn) {
       return (
         <Button
@@ -125,7 +126,7 @@ function Overview(){
   const renderUsername = () => {
     if (isLoggedIn) {
       return (
-        <Text>Welcome, {username}</Text>
+        <Text style={{}}>Welcome, {username}</Text>
       );
     } else {
       return null;
@@ -225,6 +226,9 @@ function Overview(){
     saveSemesters(updatedSemesters);
   };
   
+  const goToLoginScreen = () => {
+    navigation.navigate('Login');
+  };
 
   const renderItem = ({ item, semesterId, studentId }) => {
     if (item.id === semesterId && item.studentId === studentId) {
@@ -262,48 +266,73 @@ function Overview(){
   };
   
 
-      return (
+  return (
+    <KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  style={{ flex: 1 }}
+>
+<ScrollView style={{ flex: 1 }}>
+
     <View style={styles.container}>
       <StatusBar style="auto" />
+      <View style={isLoggedIn ? styles.loginRelated : { ...styles.loginRelated, justifyContent: "flex-end", marginRight: 10 }}>
       {renderUsername()}
       {renderLoginButton()} 
-      <Dropdown onSelect={handleDropdownChange} semesters={semesters}/>
-      <View style={styles.subjectContainer}>
+      </View>
+      {isLoggedIn ? (
+        <Dropdown onSelect={handleDropdownChange} semesters={semesters}/>
+      ) : (null)}      
 
+        <View style={styles.subjectContainer}>
+  
         <View>
           <View style={styles.row}>
-          <View style={styles.rowItem}>
-            <Text style={styles.tableTitle}>Subject</Text>
-          </View>
-          <View style={styles.rowItem}>
-            <Text style={styles.tableTitle}>Average Grade</Text>
-          </View>
-          <View style={styles.rowItem}>
+            <View style={styles.rowItem}>
+              <Text style={styles.tableTitle}>Subject</Text>
+            </View>
+            <View style={styles.rowItem}>
+              <Text style={styles.tableTitle}>Average Grade</Text>
+            </View>
+            <View style={styles.rowItem}>
               <Text style={styles.tableTitle}>Details</Text>
+            </View>
           </View>
-          </View>
-
-          <FlatList
-  data={semesters}
-  renderItem={({ item, index }) => renderItem({ item, index, semesterId: selectedSemester, studentId: currentStudentId })}
-  keyExtractor={(item, index) => `${item.studentId}_${index}`}
-/>
-
+  
+          {semesters.map((item, index) => (
+            renderItem({
+              item,
+              index,
+              semesterId: selectedSemester,
+              studentId: currentStudentId,
+            })
+          ))}
+  
         </View>
-
-        <View style={styles.addButtonContainer}>
-        <TextInput style={{textAlign: 'center', marginBottom: 5}}
+  
+        <View style={styles.addButtonContainer}  disabled={!isLoggedIn}>
+          <TextInput
+            style={{ textAlign: 'center', marginBottom: 5,
+              borderBottomWidth: 1,
+              borderBottomColor: '#e3e4ef',
+              backgroundColor: '#f0f0f5',
+              paddingLeft: 25,
+              paddingRight: 25,
+              marginTop: 25,
+            }}
             placeholder="Enter subject name"
             value={newSubject}
-            onChangeText={(text) => setNewSubject(text)} 
-          />
-          <AddSubjectButton onPress={handleAddSubject} />
+            onChangeText={(text) => setNewSubject(text)}
+            editable={isLoggedIn}
+            />
+          <AddSubjectButton onPress={isLoggedIn ? handleAddSubject : goToLoginScreen} />
         </View>
-
+  
       </View>
-      <Button onPress={clearAsyncStorage} title="Clear Async Storage">
+      <Button onPress={clearAsyncStorage} title="Clear Async Storage" disabled={!isLoggedIn}>
       </Button>
     </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -311,6 +340,7 @@ function Overview(){
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: Dimensions.get('window').height * 0.92,
     backgroundColor: '#e3e4ef',
     alignItems: 'center',
     justifyContent: 'space-evenly',
@@ -375,6 +405,13 @@ const styles = StyleSheet.create({
   loginText:{
     backgroundColor: "blue",
     color: "white",
+  },
+  loginRelated:{
+    flexDirection: "row",
+    width: "50%",
+    marginLeft: "auto",
+    justifyContent: "space-evenly",
+    alignItems: "center",
   },
 });
 

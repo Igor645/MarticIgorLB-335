@@ -9,7 +9,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import App from './App';
 
 function LoginScreen({ route }) {
     const [username, setUsername] = useState('');

@@ -34,7 +34,7 @@ export default function App() {
 function Overview(){
   const isFocused = useIsFocused();
   const [semesters, setSemesters] = useState([]);
-  const [isLoggedIn, setIsLoggedIn] = useState();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   let [currentStudentId, setCurrentStudentId] = useState(0);
   const [username, setUsername] = useState('');
 

@@ -33,12 +33,6 @@ function Overview(){
   // Function to load semesters from local storage
   const loadSemesters = async () => {
     try {
-      let defaultSemester = {
-        id: 1,
-        studentId: 1,
-        grades: {} // You can add default values here
-      };
-
       const storedSemesters = await AsyncStorage.getItem('semesters');
       if (storedSemesters !== null) {
         const parsedSemesters = JSON.parse(storedSemesters);
@@ -46,8 +40,7 @@ function Overview(){
         setSemesters(parsedSemesters);
       } else {
         // If there are no semesters in local storage, set a default semester
-        await AsyncStorage.setItem('semesters', JSON.stringify([defaultSemester]));
-        setSemesters([defaultSemester]);
+        await AsyncStorage.setItem('semesters', JSON.stringify([]));
       }
     } catch (error) {
       console.error('Error loading semesters:', error);
@@ -91,6 +84,8 @@ function Overview(){
       Alert.alert('Please enter a subject name');
       return;
     }
+
+    console.log(`This was selected ${selectedSemester}`);
   
     const foundSemesterIndex = semesters.findIndex(
       (semester) => semester.studentId === currentStudentId && semester.id === selectedSemester
@@ -224,8 +219,7 @@ function Overview(){
         </View>
 
       </View>
-      <Button onPress={clearAsyncStorage}>
-        <Text>Clear Async Storage</Text>
+      <Button onPress={clearAsyncStorage} title="Clear Async Storage">
       </Button>
     </View>
   );

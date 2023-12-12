@@ -24,6 +24,12 @@ const Dropdown = ({ onSelect, semesters }) => {
           
           setOptions(generatedOptions);
         }
+        else{
+          const generatedOptions = []
+          generatedOptions.push({ label: 'Semester 1', value: 1});
+          generatedOptions.push({ label: 'Add Semester', value: 'add_semester', color: '#009688' });
+          setOptions(generatedOptions);
+        }
       } catch (error) {
         console.error('Error fetching semesters:', error);
       }
@@ -38,7 +44,7 @@ const Dropdown = ({ onSelect, semesters }) => {
   }, [onSelect, selectedValue]);
 
   const handleAddSemester = () => {
-    const newSemesterValue = options.length + 1;
+    const newSemesterValue = options.length;
     const newSemesterLabel = `Semester ${options.length}`;
     const newSemester = { label: newSemesterLabel, value: newSemesterValue };
     const updatedOptions = [...options.slice(0, -1), newSemester, options[options.length - 1]];

@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions } from 'react-native';
+import { StyleSheet, TouchableOpacity, ActivityIndicator, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions } from 'react-native';
 import ImageButton from './listBtn';
 import AddSubjectButton from './addSubjectBtn';
 import Dropdown from './dropdown';
@@ -10,14 +10,22 @@ import { useNavigation } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
+import DetailScreen from './detailsScreen';
+import LoginScreen from './loginScreen';
+import RegisterScreen from './registerScreen';
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Overview" component={Overview} />
+        <Stack.Screen name="Overview" component={Overview}/>
         <Stack.Screen name="Details" component={DetailScreen} />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+        />
+        <Stack.Screen name="Register" component={RegisterScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -26,10 +34,10 @@ export default function App() {
 function Overview(){
   const isFocused = useIsFocused();
   const [semesters, setSemesters] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  let [currentStudentId, setCurrentStudentId] = useState(0);
+  const [username, setUsername] = useState('');
 
-  let clearAsyncStorage = async() => {
-    AsyncStorage.clear();
-  }
   // Function to load semesters from local storage
   const loadSemesters = async () => {
     try {
@@ -46,10 +54,83 @@ function Overview(){
       console.error('Error loading semesters:', error);
     }
   };
+  
+  const checkLoginStatus = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('loggedInUser');
+      console.log(userData)
+      if (userData !== null) {
+        const parsedUserData = JSON.parse(userData);
+        setIsLoggedIn(parsedUserData.isLoggedIn === 'true');
+        setCurrentStudentId(parsedUserData.studentId);
+        setUsername(parsedUserData.username);
+        console.log(`Current studentId: ${currentStudentId}`)
+      }
+    } catch (error) {
+      console.error('Error fetching login status:', error);
+    }
+  };
 
   useEffect(() => {
-    loadSemesters();
-  }, [isFocused]); // Load semesters on component mount
+    const fetchData = async () => {
+      try {
+        await checkLoginStatus();
+        await loadSemesters();
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+
+    fetchData();
+  }, [isFocused]);
+
+  let clearAsyncStorage = async() => {
+    AsyncStorage.clear();
+  }
+
+  
+  const handleLogout = async () => {
+    try {
+      // Perform logout action - clear user data or perform any necessary actions
+      // For example:
+      await AsyncStorage.removeItem('loggedInUser');
+      setIsLoggedIn(false);
+      setCurrentStudentId(0);
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
+  const renderLoginButton = () => {
+    console.log(isLoggedIn)
+    if (isLoggedIn) {
+      return (
+        <Button
+          title="Logout"
+          onPress={handleLogout}
+          style={styles.loginText}
+        />
+      );
+    } else {
+      return (
+        <Button
+          title="Login"
+          onPress={() => navigation.navigate('Login')}
+          style={styles.loginText}
+        />
+      );
+    }
+  };
+
+  const renderUsername = () => {
+    if (isLoggedIn) {
+      return (
+        <Text>Welcome, {username}</Text>
+      );
+    } else {
+      return null;
+    }
+  };
 
   // Function to save semesters to local storage
   const saveSemesters = async (data) => {
@@ -63,7 +144,6 @@ function Overview(){
 
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [newSubject, setNewSubject] = useState('');
-  let currentStudentId = 1
 
   const handleDropdownChange = (semesterId) => {
     setSelectedSemester(semesterId);
@@ -181,10 +261,12 @@ function Overview(){
     }
   };
   
-  
-  return (
+
+      return (
     <View style={styles.container}>
       <StatusBar style="auto" />
+      {renderUsername()}
+      {renderLoginButton()} 
       <Dropdown onSelect={handleDropdownChange} semesters={semesters}/>
       <View style={styles.subjectContainer}>
 
@@ -224,158 +306,6 @@ function Overview(){
     </View>
   );
 }
-
-function DetailScreen({ route }) {
-  const screenWidth = Dimensions.get('window').width;
-  const screenHeight = Dimensions.get('window').height;
-  const chartWidth = screenWidth * 0.70; // 80% of screen width (adjust as needed)
-  const chartHeight = screenHeight * 0.25;
-  const { subject } = route.params;
-  const [grades, setGrades] = useState(route.params.grades || []);
-  const [newGrade, setNewGrade] = useState('');
-
-  const handleAddGrade = async () => {
-    if (newGrade.trim() === '' || newGrade < 0 || newGrade > 6) {
-      return;
-    }
-  
-    const { semesterId, studentId } = route.params;
-  
-    try {
-      const storedSemesters = await AsyncStorage.getItem('semesters');
-      if (storedSemesters !== null) {
-        const parsedSemesters = JSON.parse(storedSemesters);
-        const updatedSemesters = parsedSemesters.map((semester) => {
-          if (
-            semester.grades.hasOwnProperty(subject) &&
-            semester.studentId === studentId &&
-            semester.id === semesterId
-          ) {
-            const updatedGrades = [...semester.grades[subject], newGrade];
-            return {
-              ...semester,
-              grades: {
-                ...semester.grades,
-                [subject]: updatedGrades,
-              },
-            };
-          }
-          return semester;
-        });
-  
-        await AsyncStorage.setItem('semesters', JSON.stringify(updatedSemesters));
-  
-        setGrades([...grades, newGrade]);
-        setNewGrade('');
-      }
-    } catch (error) {
-      console.error('Error adding grade:', error);
-    }
-  };
-  
-  const handleDeleteGrade = async (index) => {
-    try {
-      const { semesterId, studentId } = route.params;
-      const storedSemesters = await AsyncStorage.getItem('semesters');
-      if (storedSemesters !== null) {
-        const parsedSemesters = JSON.parse(storedSemesters);
-        const updatedSemesters = parsedSemesters.map((semester) => {
-          if (
-            semester.grades.hasOwnProperty(subject) &&
-            semester.studentId === studentId &&
-            semester.id === semesterId
-          ) {
-            const updatedGrades = semester.grades[subject].filter((_, i) => i !== index);
-            return {
-              ...semester,
-              grades: {
-                ...semester.grades,
-                [subject]: updatedGrades,
-              },
-            };
-          }
-          return semester;
-        });
-  
-        await AsyncStorage.setItem('semesters', JSON.stringify(updatedSemesters));
-  
-        const updatedGrades = [...grades.slice(0, index), ...grades.slice(index + 1)];
-        setGrades(updatedGrades);
-        }
-        } catch (error) {
-        console.error('Error deleting grade:', error);
-        }
-      };
-
-      return (
-        <View style={styles.container}>
-          <View style={styles.subjectContainer}>
-            <Text style={styles.subjectTitle}>{subject}</Text>
-            <FlatList
-              data={grades}
-              renderItem={({ item, index }) => (
-                <View
-                  style={[
-                    styles.row,
-                    { backgroundColor: index % 2 === 0 ? '#caf0f8' : '#90e0ef' },
-                  ]}
-                >
-                  <View style={styles.gradeItem}>
-                    <Text>{item}</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => handleDeleteGrade(index)}>
-                    <Image source={require('./images/trash.png')} style={styles.deleteButton} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              keyExtractor={(item, index) => `${subject}_${index}`}
-            />
-            {grades.length > 1 && new Set(grades).size > 1 && (
-              <View style={styles.chartContainer}>
-                <LineChart
-                  data={{
-                    labels: grades.map((_, index) => `${index + 1}`),
-                    datasets: [{ data: grades }],
-                  }}
-                  withVerticalLabelsOffset={-10} // Adjust the offset for vertical labels
-                  withHorizontalLabelsOffset={-100}
-                  width={chartWidth}
-                  height={chartHeight}
-                  chartConfig={{
-                    backgroundColor: '#FFFFFF',
-                    backgroundGradientFrom: '#FFFFFF',
-                    backgroundGradientTo: '#FFFFFF',
-                    decimalPlaces: 2,
-                    color: (opacity = 1) => `rgba(62,146,204, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                  }}
-                />
-              </View>
-            )}
-
-            {grades.length <= 1 || new Set(grades).size <= 1 && (
-              <View style={{width: "100%"}}>
-                <Text style={{textAlign: 'center'}}>Not enough data to display the chart.</Text>
-              </View>
-            )}
-            <View style={styles.addButtonContainer}>
-            <TextInput style={{textAlign: 'center', marginBottom: 5}}
-                placeholder="Enter new grade"
-                value={newGrade}
-                onChangeText={(text) => setNewGrade(text)}
-                keyboardType="numeric" // Set the keyboardType to 'numeric' for a number pad
-              />
-              <TouchableOpacity onPress={handleAddGrade}>
-              <Text>Add Grade</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      );      
-}
-
 
 
 const styles = StyleSheet.create({
@@ -442,4 +372,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginRight: 30,
   },
+  loginText:{
+    backgroundColor: "blue",
+    color: "white",
+  },
 });
+

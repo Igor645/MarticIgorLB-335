@@ -58,7 +58,7 @@ const Dropdown = ({ onSelect, semesters, onDeleteCompleted }) => {
       newSemesterValue = options.length - 1;
       newSemesterLabel = `Semester ${options.length - 1}`;
     }
-    const newSemester = { label: newSemesterLabel, value: newSemesterValue };
+    const newSemester = { label: newSemesterLabel, value: newSemesterValue, color:"black" };
     let insertIndex = options.length - 1;
 
     const deleteOptionIndex = options.findIndex(option => option.value === 'del_semester');

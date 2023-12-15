@@ -1,39 +1,23 @@
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { FIREBASE_AUTH } from './FirebaseConfig';
 
 function RegisterScreen({ navigation }) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const auth = FIREBASE_AUTH;
 
   const handleRegister = async () => {
     try {
-      if (!username || !password) {
-        Alert.alert('Incomplete Information', 'Please provide username and password.');
+      if (!email || !password) {
+        Alert.alert('Incomplete Information', 'Please provide email and password.');
         return;
       }
   
-      let users = await AsyncStorage.getItem('users');
-      let parsedUsers = users ? JSON.parse(users) : [];
-      let studentId = parsedUsers.length + 1;
+      const response = await createUserWithEmailAndPassword(auth, email, password)
   
-      // Ensure unique studentId
-      while (parsedUsers.some(user => user.studentId === studentId)) {
-        studentId++;
-      }
-  
-      const existingUser = parsedUsers.find(user => user.username === username);
-      if (existingUser) {
-        Alert.alert('User Already Exists', 'Please use a different username.');
-        return;
-      }
-  
-      const newUser = { username, password, studentId };
-  
-      const updatedUsers = [...parsedUsers, newUser];
-      await AsyncStorage.setItem('users', JSON.stringify(updatedUsers));
-  
-      Alert.alert('Registration Successful', 'You can now login.');
       navigation.navigate('Login');
     } catch (error) {
       console.error('Error registering:', error);
@@ -51,13 +35,13 @@ function RegisterScreen({ navigation }) {
     <Text style={{fontSize: 20}}>Register Screen</Text>
     <TextInput
       placeholder="Username"
-      value={username}
-      onChangeText={setUsername}
+      value={email}
+      onChangeText={setEmail}
       style={{
         borderBottomWidth: 1,
         borderBottomColor: '#e3e4ef',
         backgroundColor: '#f0f0f5',
-        padding: 10, // Adjust the padding to fit the text comfortably
+        padding: 10,
       }}    />
     <TextInput
       placeholder="Password"
@@ -68,7 +52,7 @@ function RegisterScreen({ navigation }) {
         borderBottomWidth: 1,
         borderBottomColor: '#e3e4ef',
         backgroundColor: '#f0f0f5',
-        padding: 10, // Adjust the padding to fit the text comfortably
+        padding: 10,
       }}    />
     <Button title="Register" onPress={handleRegister} />
     </View>
@@ -128,10 +112,10 @@ const styles = StyleSheet.create({
       width: 25,
       height: 25,
       resizeMode: 'contain',
-      tintColor: 'red', // Add a tint color or customize as needed
+      tintColor: 'red',
     },
     subjectTitle: {
-      fontSize: 20, // Adjust the size as needed
+      fontSize: 20,
       textAlign: 'center',
       marginBottom: 10,
     },

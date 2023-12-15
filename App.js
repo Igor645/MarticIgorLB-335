@@ -12,7 +12,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
 import DetailScreen from './detailsScreen';
 import LoginScreen from './loginScreen';
+import { FIREBASE_AUTH } from './FirebaseConfig';
 import RegisterScreen from './registerScreen';
+import * as ScreenOrientation from 'expo-screen-orientation';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -35,10 +38,9 @@ function Overview(){
   const isFocused = useIsFocused();
   const [semesters, setSemesters] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  let [currentStudentId, setCurrentStudentId] = useState(0);
+  const [currentStudentId, setCurrentStudentId] = useState(0);
   const [username, setUsername] = useState('');
 
-  // Function to load semesters from local storage
   const loadSemesters = async () => {
     try {
       const storedSemesters = await AsyncStorage.getItem('semesters');
@@ -86,6 +88,10 @@ function Overview(){
     fetchData();
   }, [isFocused]);
 
+  const handleDropdownDeleteCompleted = async () => {
+    await loadSemesters();
+  };
+
   let clearAsyncStorage = async() => {
     AsyncStorage.clear();
   }
@@ -93,8 +99,7 @@ function Overview(){
   
   const handleLogout = async () => {
     try {
-      // Perform logout action - clear user data or perform any necessary actions
-      // For example:
+      await FIREBASE_AUTH.signOut()
       await AsyncStorage.removeItem('loggedInUser');
       setIsLoggedIn(false);
       setCurrentStudentId(0);
@@ -126,14 +131,13 @@ function Overview(){
   const renderUsername = () => {
     if (isLoggedIn) {
       return (
-        <Text style={{}}>Welcome, {username}</Text>
+        <Text style={{maxWidth: "50%", }}>Welcome, {username}</Text>
       );
     } else {
       return null;
     }
   };
 
-  // Function to save semesters to local storage
   const saveSemesters = async (data) => {
     try {
       await AsyncStorage.setItem('semesters', JSON.stringify(data));
@@ -156,8 +160,8 @@ function Overview(){
     navigation.navigate('Details', {
       subject,
       grades,
-      semesterId: selectedSemester, // Pass the semesterId
-      studentId: currentStudentId,    // Pass the studentId
+      semesterId: selectedSemester,
+      studentId: currentStudentId,
     });  };
 
   const handleAddSubject = () => {
@@ -202,15 +206,42 @@ function Overview(){
 
   const calculateAverage = (semester, subject) => {
     if (semester.grades.hasOwnProperty(subject)) {
-      const grades = semester.grades[subject].map(parseFloat); // Convert grades to numbers
+      const grades = semester.grades[subject].map(parseFloat);
       if (grades.length > 0) {
         const sumOfGrades = grades.reduce((sum, grade) => sum + grade, 0);
         const averageGrade = sumOfGrades / grades.length;
         return averageGrade.toFixed(2);
       }
     }
-    return '--'; // Default value if no grades exist
+    return '--';
   };
+
+  const calculateSemesterAverage = () => {
+    const studentSemesters = semesters.filter(
+      (semester) => semester.studentId === currentStudentId
+    );
+  
+    const semesterAverages = studentSemesters.map((semester) => {
+      let semesterSum = 0;
+      let semesterSubjects = 0;
+  
+      Object.keys(semester.grades).forEach((subject) => {
+        const grades = semester.grades[subject].map(parseFloat);
+        if (grades.length > 0) {
+          const sumOfGrades = grades.reduce((sum, grade) => sum + grade, 0);
+          semesterSum += sumOfGrades;
+          semesterSubjects += grades.length;
+        }
+      });
+  
+      const semesterAverage =
+        semesterSubjects > 0 ? semesterSum / semesterSubjects : 0;
+      return { semesterId: semester.id, average: semesterAverage.toFixed(2) };
+    });
+  
+    return semesterAverages;
+  };
+  
   
   const handleDeleteSubject = (semesterId, subject) => {
     const updatedSemesters = semesters.map((semester) => {
@@ -234,7 +265,7 @@ function Overview(){
     if (item.id === semesterId && item.studentId === studentId) {
       const subjectGrades = Object.entries(item.grades);
   
-      return subjectGrades.map(([subject, grades], index) => {
+      let rows = subjectGrades.map(([subject, grades], index) => {
         let averageGrade = calculateAverage(item, subject);
   
         return (
@@ -260,11 +291,31 @@ function Overview(){
           </View>
         );
       });
+  
+      // Calculating semester average and adding a total row
+      const semesterAverage = calculateSemesterAverage().find(
+        (average) => average.semesterId === item.id
+      );
+  
+      if (semesterAverage) {
+        rows.push(
+          <View style={[styles.row, { backgroundColor: '#f0f0f0' }]} key={`Total_${item.id}`}>
+            <View style={styles.rowItem}>
+              <Text>Total</Text>
+            </View>
+            <View style={styles.rowItem}>
+              <Text>{semesterAverage.average}</Text>
+            </View>
+            <View style={styles.rowItem}>{/* Empty cell for no buttons */}</View>
+          </View>
+        );
+      }
+  
+      return rows;
     } else {
       return null;
     }
   };
-  
 
   return (
     <KeyboardAvoidingView
@@ -280,7 +331,8 @@ function Overview(){
       {renderLoginButton()} 
       </View>
       {isLoggedIn ? (
-        <Dropdown onSelect={handleDropdownChange} semesters={semesters}/>
+        <Dropdown onSelect={handleDropdownChange}   onDeleteCompleted={handleDropdownDeleteCompleted} 
+        semesters={semesters}/>
       ) : (null)}      
 
         <View style={styles.subjectContainer}>
@@ -414,4 +466,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+
 

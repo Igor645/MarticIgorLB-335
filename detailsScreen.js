@@ -19,7 +19,57 @@ function DetailScreen({ route }) {
     const { subject } = route.params;
     const [grades, setGrades] = useState(route.params.grades || []);
     const [newGrade, setNewGrade] = useState('');
-  
+    const [isEditing, setIsEditing] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editedGrade, setEditedGrade] = useState('');
+
+  const handleEditGrade = (index) => {
+    setIsEditing(true);
+    setEditingIndex(index);
+    setEditedGrade(grades[index].toString());
+  };
+
+  const handleUpdateGrade = async () => {
+    if (editedGrade.trim() === '' || editedGrade < 0 || editedGrade > 6) {
+      return;
+    }
+
+    try {
+      const { semesterId, studentId } = route.params;
+      const storedSemesters = await AsyncStorage.getItem('semesters');
+
+      if (storedSemesters !== null) {
+        const parsedSemesters = JSON.parse(storedSemesters);
+        const updatedSemesters = parsedSemesters.map((semester) => {
+          if (
+            semester.grades.hasOwnProperty(subject) &&
+            semester.studentId === studentId &&
+            semester.id === semesterId
+          ) {
+            const updatedGrades = [...semester.grades[subject]];
+            updatedGrades[editingIndex] = parseFloat(editedGrade);
+            return {
+              ...semester,
+              grades: {
+                ...semester.grades,
+                [subject]: updatedGrades,
+              },
+            };
+          }
+          return semester;
+        });
+
+        await AsyncStorage.setItem('semesters', JSON.stringify(updatedSemesters));
+        setGrades(updatedSemesters.find((semester) => semester.id === semesterId).grades[subject]);
+        setIsEditing(false);
+        setEditingIndex(null);
+        setEditedGrade('');
+      }
+    } catch (error) {
+      console.error('Error updating grade:', error);
+    }
+  };
+
     const handleAddGrade = async () => {
       if (newGrade.trim() === '' || newGrade < 0 || newGrade > 6) {
         return;
@@ -103,21 +153,45 @@ function DetailScreen({ route }) {
             <View style={styles.subjectContainer}>
               <Text style={styles.subjectTitle}>{subject}</Text>
               {grades.map((item, index) => (
-                <View
-                  key={`${subject}_${index}`}
-                  style={[
-                    styles.row,
-                    { backgroundColor: index % 2 === 0 ? '#caf0f8' : '#90e0ef' },
-                  ]}
-                >
-                  <View style={styles.gradeItem}>
-                    <Text>{item}</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => handleDeleteGrade(index)}>
-                    <Image source={require('./images/trash.png')} style={styles.deleteButton} />
-                  </TouchableOpacity>
-                </View>
-              ))}
+              <View
+              key={`${subject}_${index}`}
+              style={[
+                styles.row,
+                { backgroundColor: index % 2 === 0 ? '#caf0f8' : '#90e0ef' },
+              ]}
+            >
+              <View style={styles.gradeItem}>
+                {isEditing && editingIndex === index ? (
+                  <TextInput
+                    style={{
+                      textAlign: 'center',
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#e3e4ef',
+                      backgroundColor: '#f0f0f5',
+                      paddingLeft: 25,
+                      paddingRight: 25,
+                    }}
+                    value={editedGrade}
+                    onChangeText={(text) => setEditedGrade(text)}
+                    keyboardType="numeric"
+                    onSubmitEditing={handleUpdateGrade}
+                  />
+                ) : (
+                  <TouchableOpacity onPress={() => handleEditGrade(index)}>
+                    <Text>
+                        {item}
+                    </Text>
+                  </TouchableOpacity> 
+                )}
+              </View>
+              <TouchableOpacity onPress={() => handleDeleteGrade(index)}>
+                <Image
+                  source={require('./images/trash.png')}
+                  style={styles.deleteButton}
+                />
+              </TouchableOpacity>
+            </View>
+            ))}
               {grades.length > 1 && new Set(grades).size > 1 && (
                 <View style={styles.chartContainer}>
                   <LineChart
@@ -125,7 +199,7 @@ function DetailScreen({ route }) {
                       labels: grades.map((_, index) => `${index + 1}`),
                       datasets: [{ data: grades }],
                     }}
-                    withVerticalLabelsOffset={-10} // Adjust the offset for vertical labels
+                    withVerticalLabelsOffset={-10}
                     withHorizontalLabelsOffset={-100}
                     width={chartWidth}
                     height={chartHeight}
@@ -196,7 +270,7 @@ function DetailScreen({ route }) {
       },
     row: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      justifyContent: 'space-evenly',
       padding: 5,
       borderBottomWidth: 1,
       borderBottomColor: '#00b4d8',
@@ -219,7 +293,7 @@ function DetailScreen({ route }) {
     },
     gradeItem: {
       flex: 1,
-    },
+    },    
     deleteButton: {
       width: 25,
       height: 25,

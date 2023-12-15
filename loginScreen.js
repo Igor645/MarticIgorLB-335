@@ -9,37 +9,36 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FIREBASE_AUTH } from './FirebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 function LoginScreen({ route }) {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigation = useNavigation();
+    const auth = FIREBASE_AUTH;
 
-    const handleLogin = async () => {
+      const handleLogin = async () => {
         try {
-          if (!username || !password) {
+          if (!email || !password) {
             Alert.alert('Incomplete Information', 'Please provide username and password.');
             return;
           }
       
-          const users = await AsyncStorage.getItem('users');
-          const parsedUsers = users ? JSON.parse(users) : [];
-      
-          const user = parsedUsers.find(user => user.username === username && user.password === password);
-          if (user) {
-            // Assuming studentId is present in the user object
-            await AsyncStorage.setItem(
-              'loggedInUser',
-              JSON.stringify({
-                isLoggedIn: true,
-                studentId: user.studentId,
-                username: user.username,
-              })
-            );
-            navigation.navigate('Overview');
-          } else {
-            Alert.alert('Login Failed', 'Invalid username or password.');
-          }
+          const response = await signInWithEmailAndPassword(auth, email.trim(), password)
+
+          const atIndex = email.indexOf('@');
+          const username = email.slice(0, atIndex);
+
+          await AsyncStorage.setItem(
+            'loggedInUser',
+            JSON.stringify({
+              isLoggedIn: true,
+              studentId: email,
+              username: username,
+            })
+          );
+          navigation.navigate('Overview');
         } catch (error) {
           console.error('Error logging in:', error);
           Alert.alert('Login Failed', 'Please try again.');
@@ -55,14 +54,14 @@ function LoginScreen({ route }) {
         <View style={[styles.subjectContainer, { flexDirection: "column", justifyContent: "space-evenly", alignItems: "center" }]}>
         <Text style={{fontSize: 20}}>Login Screen</Text>
         <TextInput
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
         style={{
           borderBottomWidth: 1,
           borderBottomColor: '#e3e4ef',
           backgroundColor: '#f0f0f5',
-          padding: 10, // Adjust the padding to fit the text comfortably
+          padding: 10,
         }}
       />
 
@@ -75,14 +74,14 @@ function LoginScreen({ route }) {
           borderBottomWidth: 1,
           borderBottomColor: '#e3e4ef',
           backgroundColor: '#f0f0f5',
-          padding: 10, // Adjust the padding to fit the text comfortably
+          padding: 10,
         }}
       />
         <Button title="Login" onPress={handleLogin} />
         <TouchableOpacity style={{
             backgroundColor: "lime", 
             padding: 3,
-            borderRadius: 1, // Adjust the value as needed
+            borderRadius: 1,
             shadowColor: 'black',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.5,
@@ -148,10 +147,10 @@ function LoginScreen({ route }) {
       width: 25,
       height: 25,
       resizeMode: 'contain',
-      tintColor: 'red', // Add a tint color or customize as needed
+      tintColor: 'red',
     },
     subjectTitle: {
-      fontSize: 20, // Adjust the size as needed
+      fontSize: 20,
       textAlign: 'center',
       marginBottom: 10,
     },

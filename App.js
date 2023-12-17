@@ -292,7 +292,6 @@ function Overview(){
         );
       });
   
-      // Calculating semester average and adding a total row
       const semesterAverage = calculateSemesterAverage().find(
         (average) => average.semesterId === item.id
       );
@@ -441,10 +440,10 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     resizeMode: 'contain',
-    tintColor: 'red', // Add a tint color or customize as needed
+    tintColor: 'red', 
   },
   subjectTitle: {
-    fontSize: 20, // Adjust the size as needed
+    fontSize: 20,
     textAlign: 'center',
     marginBottom: 10,
   },

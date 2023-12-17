@@ -14,7 +14,7 @@ import { LineChart } from 'react-native-chart-kit';
 function DetailScreen({ route }) {
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
-    const chartWidth = screenWidth * 0.70; // 80% of screen width (adjust as needed)
+    const chartWidth = screenWidth * 0.70; 
     const chartHeight = screenHeight * 0.25;
     const { subject } = route.params;
     const [grades, setGrades] = useState(route.params.grades || []);
@@ -298,10 +298,10 @@ function DetailScreen({ route }) {
       width: 25,
       height: 25,
       resizeMode: 'contain',
-      tintColor: 'red', // Add a tint color or customize as needed
+      tintColor: 'red',
     },
     subjectTitle: {
-      fontSize: 20, // Adjust the size as needed
+      fontSize: 20,
       textAlign: 'center',
       marginBottom: 10,
     },

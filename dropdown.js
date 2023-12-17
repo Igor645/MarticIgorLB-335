@@ -140,10 +140,10 @@ const Dropdown = ({ onSelect, semesters, onDeleteCompleted }) => {
       hideDoneBar={true}
       style={{
         inputIOS: {
-          color: '#0096FF', // Change the color of the selected item
+          color: '#0096FF',  
         },
         inputAndroid: {
-          color: '#0096FF', // Change the color of the selected item (for Android)
+          color: '#0096FF', 
         },
       }}
     />

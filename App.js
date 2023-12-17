@@ -1,19 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions, KeyboardAvoidingView, Platform} from 'react-native';
-import ImageButton from './listBtn';
-import AddSubjectButton from './addSubjectBtn';
-import Dropdown from './dropdown';
+import ImageButton from './components/listBtn';
+import AddSubjectButton from './components/addSubjectBtn';
+import Dropdown from './components/dropdown';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart } from 'react-native-chart-kit';
-import DetailScreen from './detailsScreen';
-import LoginScreen from './loginScreen';
+import DetailScreen from './components/detailsScreen';
+import LoginScreen from './components/loginScreen';
 import { FIREBASE_AUTH } from './FirebaseConfig';
-import RegisterScreen from './registerScreen';
+import RegisterScreen from './components/registerScreen';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 const Stack = createStackNavigator();

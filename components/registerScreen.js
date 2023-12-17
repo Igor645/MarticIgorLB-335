@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, Image, Button, Text, View, FlatList, Alert, TextInput, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { FIREBASE_AUTH } from './FirebaseConfig';
+import { FIREBASE_AUTH } from '../FirebaseConfig';
 
 function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState('');

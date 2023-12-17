@@ -186,7 +186,7 @@ function DetailScreen({ route }) {
               </View>
               <TouchableOpacity onPress={() => handleDeleteGrade(index)}>
                 <Image
-                  source={require('./images/trash.png')}
+                  source={require('../images/trash.png')}
                   style={styles.deleteButton}
                 />
               </TouchableOpacity>

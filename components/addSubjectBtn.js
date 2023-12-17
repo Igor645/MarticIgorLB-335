@@ -1,15 +1,16 @@
 import React from 'react';
 import { TouchableOpacity, Image } from 'react-native';
 
-const ImageButton = ({ onPress }) => {
+const AddSubjectButton = ({ onPress }) => {
   return (
     <TouchableOpacity onPress={onPress}>
       <Image
-        source={require('./images/List.png')}
-        style={{ width: 20, height: 20 }}
+        source={require('../images/Add.png')}
+        style={{ width: 25, height: 25 }}
       />
     </TouchableOpacity>
   );
 };
 
-export default ImageButton;
+export default AddSubjectButton;
+

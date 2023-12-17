@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import RNPickerSelect from 'react-native-picker-select';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loadSemesters } from './App';
+import { loadSemesters } from '../App';
 
 const Dropdown = ({ onSelect, semesters, onDeleteCompleted }) => {
   const [selectedValue, setSelectedValue] = useState(1);
@@ -23,6 +23,7 @@ const Dropdown = ({ onSelect, semesters, onDeleteCompleted }) => {
           const generatedOptions = Array.from({ length: highestSemesterId }, (_, index) => ({
             label: `Semester ${index + 1}`,
             value: index + 1,
+            color: "#000000",
           }));
           generatedOptions.push({ label: 'Add Semester', value: 'add_semester', color: '#009688' });
           if(generatedOptions.length > 2){
